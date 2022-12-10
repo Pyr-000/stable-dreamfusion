@@ -1,5 +1,6 @@
 from transformers import CLIPTextModel, CLIPTokenizer, logging
 from diffusers import AutoencoderKL, UNet2DConditionModel, PNDMScheduler, DDIMScheduler
+from accelerate import cpu_offload
 
 # suppress partial model loading warning
 logging.set_verbosity_error()
@@ -37,6 +38,8 @@ class StableDiffusion(nn.Module):
         self.tokenizer = CLIPTokenizer.from_pretrained(model_key, subfolder="tokenizer")
         self.text_encoder = CLIPTextModel.from_pretrained(model_key, subfolder="text_encoder").to(self.device)
         self.unet = UNet2DConditionModel.from_pretrained(model_key, subfolder="unet").to(self.device)
+        cpu_offload(self.unet)
+        cpu_offload(self.vae)
         
         self.scheduler = DDIMScheduler.from_config(model_key, subfolder="scheduler")
         # self.scheduler = PNDMScheduler.from_config(model_key, subfolder="scheduler")
